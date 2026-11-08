@@ -1,7 +1,7 @@
-diff -ruN orig_dev/src/main/java/net/vulkanmod/vulkan/Vulkan.java VulkanMod-dev/src/main/java/net/vulkanmod/vulkan/Vulkan.java
---- orig_dev/src/main/java/net/vulkanmod/vulkan/Vulkan.java	2026-11-08 06:33:54.686198648 +0000
-+++ VulkanMod-dev/src/main/java/net/vulkanmod/vulkan/Vulkan.java	2026-11-08 06:33:54.726087956 +0000
-@@ -41,14 +41,14 @@
+diff -ruN a/src/main/java/net/vulkanmod/vulkan/Vulkan.java b/src/main/java/net/vulkanmod/vulkan/Vulkan.java
+--- a/src/main/java/net/vulkanmod/vulkan/Vulkan.java	2026-08-13 21:43:08.000000000 +0000
++++ b/src/main/java/net/vulkanmod/vulkan/Vulkan.java	2026-11-08 08:01:20.518152376 +0000
+@@ -41,14 +41,18 @@
  import static org.lwjgl.vulkan.EXTDebugUtils.*;
  import static org.lwjgl.vulkan.KHRPortabilityEnumeration.VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME;
  import static org.lwjgl.vulkan.VK10.*;
@@ -10,6 +10,10 @@ diff -ruN orig_dev/src/main/java/net/vulkanmod/vulkan/Vulkan.java VulkanMod-dev/
  
  public class Vulkan {
  
++    static {
++        net.vulkanmod.vulkan.util.AndroidNatives.install();
++    }
++
          public static final boolean ENABLE_VALIDATION_LAYERS = false;
  //    public static final boolean ENABLE_VALIDATION_LAYERS = true;
  
@@ -18,7 +22,7 @@ diff -ruN orig_dev/src/main/java/net/vulkanmod/vulkan/Vulkan.java VulkanMod-dev/
  
      public static final Set<String> VALIDATION_LAYERS;
  
-@@ -65,7 +65,7 @@
+@@ -65,7 +69,7 @@
      }
  
      public static final Set<String> REQUIRED_DEVICE_EXTENSIONS = Set.of(
@@ -27,7 +31,7 @@ diff -ruN orig_dev/src/main/java/net/vulkanmod/vulkan/Vulkan.java VulkanMod-dev/
      );
  
      public static long window;
-@@ -166,7 +166,7 @@
+@@ -166,7 +170,7 @@
              allocatorCreateInfo.device(DeviceManager.vkDevice);
              allocatorCreateInfo.pVulkanFunctions(vulkanFunctions);
              allocatorCreateInfo.instance(Instance.instance);
@@ -36,7 +40,7 @@ diff -ruN orig_dev/src/main/java/net/vulkanmod/vulkan/Vulkan.java VulkanMod-dev/
  
              PointerBuffer pAllocator = stack.pointers(VK_NULL_HANDLE);
  
-@@ -265,7 +265,7 @@
+@@ -265,7 +269,7 @@
                  appInfo.applicationVersion(VK_MAKE_VERSION(1, 0, 0));
                  appInfo.pEngineName(stack.UTF8Safe("VulkanMod Engine"));
                  appInfo.engineVersion(VK_MAKE_VERSION(1, 0, 0));
@@ -45,9 +49,9 @@ diff -ruN orig_dev/src/main/java/net/vulkanmod/vulkan/Vulkan.java VulkanMod-dev/
  
                  VkInstanceCreateInfo createInfo = VkInstanceCreateInfo.calloc(stack);
  
-diff -ruN orig_dev/src/main/java/net/vulkanmod/vulkan/device/Device.java VulkanMod-dev/src/main/java/net/vulkanmod/vulkan/device/Device.java
---- orig_dev/src/main/java/net/vulkanmod/vulkan/device/Device.java	2026-11-08 06:33:54.686247170 +0000
-+++ VulkanMod-dev/src/main/java/net/vulkanmod/vulkan/device/Device.java	2026-11-08 06:33:54.726600016 +0000
+diff -ruN a/src/main/java/net/vulkanmod/vulkan/device/Device.java b/src/main/java/net/vulkanmod/vulkan/device/Device.java
+--- a/src/main/java/net/vulkanmod/vulkan/device/Device.java	2026-08-13 21:43:08.000000000 +0000
++++ b/src/main/java/net/vulkanmod/vulkan/device/Device.java	2026-11-08 06:33:54.726600016 +0000
 @@ -69,10 +69,10 @@
  
          this.availableFeatures = VkPhysicalDeviceFeatures2.calloc().sType$Default();
@@ -61,9 +65,9 @@ diff -ruN orig_dev/src/main/java/net/vulkanmod/vulkan/device/Device.java VulkanM
          this.availableFeatures.pNext(this.availableFeatures12);
  
          vkGetPhysicalDeviceFeatures2(this.physicalDevice, this.availableFeatures);
-diff -ruN orig_dev/src/main/java/net/vulkanmod/vulkan/device/DeviceManager.java VulkanMod-dev/src/main/java/net/vulkanmod/vulkan/device/DeviceManager.java
---- orig_dev/src/main/java/net/vulkanmod/vulkan/device/DeviceManager.java	2026-11-08 06:33:54.686273281 +0000
-+++ VulkanMod-dev/src/main/java/net/vulkanmod/vulkan/device/DeviceManager.java	2026-11-08 06:33:54.726890741 +0000
+diff -ruN a/src/main/java/net/vulkanmod/vulkan/device/DeviceManager.java b/src/main/java/net/vulkanmod/vulkan/device/DeviceManager.java
+--- a/src/main/java/net/vulkanmod/vulkan/device/DeviceManager.java	2026-08-13 21:43:08.000000000 +0000
++++ b/src/main/java/net/vulkanmod/vulkan/device/DeviceManager.java	2026-11-08 06:33:54.726890741 +0000
 @@ -24,7 +24,7 @@
  import static org.lwjgl.vulkan.EXTDebugUtils.VK_EXT_DEBUG_UTILS_EXTENSION_NAME;
  import static org.lwjgl.vulkan.KHRSurface.*;
@@ -95,9 +99,9 @@ diff -ruN orig_dev/src/main/java/net/vulkanmod/vulkan/device/DeviceManager.java 
  
              graphicsQueue = new GraphicsQueue(stack, indices.graphicsFamily);
              transferQueue = new TransferQueue(stack, indices.transferFamily);
-diff -ruN orig_dev/src/main/java/net/vulkanmod/vulkan/shader/SpirvCompiler.java VulkanMod-dev/src/main/java/net/vulkanmod/vulkan/shader/SpirvCompiler.java
---- orig_dev/src/main/java/net/vulkanmod/vulkan/shader/SpirvCompiler.java	2026-11-08 06:33:54.687086130 +0000
-+++ VulkanMod-dev/src/main/java/net/vulkanmod/vulkan/shader/SpirvCompiler.java	2026-11-08 06:33:54.726390359 +0000
+diff -ruN a/src/main/java/net/vulkanmod/vulkan/shader/SpirvCompiler.java b/src/main/java/net/vulkanmod/vulkan/shader/SpirvCompiler.java
+--- a/src/main/java/net/vulkanmod/vulkan/shader/SpirvCompiler.java	2026-08-13 21:43:08.000000000 +0000
++++ b/src/main/java/net/vulkanmod/vulkan/shader/SpirvCompiler.java	2026-11-08 06:33:54.726390359 +0000
 @@ -7,7 +7,7 @@
  import org.lwjgl.util.shaderc.ShadercIncludeResolveI;
  import org.lwjgl.util.shaderc.ShadercIncludeResult;
@@ -116,3 +120,72 @@ diff -ruN orig_dev/src/main/java/net/vulkanmod/vulkan/shader/SpirvCompiler.java 
          shaderc_compile_options_set_include_callbacks(options, SHADER_INCLUDER, SHADER_RELEASER, pUserData);
  
          Shaderc.shaderc_compile_options_set_auto_bind_uniforms(options, true);
+diff -ruN a/src/main/java/net/vulkanmod/vulkan/util/AndroidNatives.java b/src/main/java/net/vulkanmod/vulkan/util/AndroidNatives.java
+--- a/src/main/java/net/vulkanmod/vulkan/util/AndroidNatives.java	1970-01-01 00:00:00.000000000 +0000
++++ b/src/main/java/net/vulkanmod/vulkan/util/AndroidNatives.java	2026-11-08 08:01:20.476757389 +0000
+@@ -0,0 +1,65 @@
++package net.vulkanmod.vulkan.util;
++
++import java.io.File;
++import java.nio.file.Files;
++import java.nio.file.StandardCopyOption;
++
++/**
++ * Android helper: the Android linker refuses to dlopen libraries from shared storage
++ * (/storage/emulated/0). Copy any *.so found in such a directory of org.lwjgl.librarypath
++ * into the first app-private directory of the same path, so LWJGL can load them.
++ */
++public final class AndroidNatives {
++    private static boolean done = false;
++
++    private AndroidNatives() {}
++
++    public static synchronized void install() {
++        if (done) {
++            return;
++        }
++        done = true;
++
++        try {
++            String libraryPath = System.getProperty("org.lwjgl.librarypath");
++            if (libraryPath == null || libraryPath.isEmpty()) {
++                return;
++            }
++
++            File src = null;
++            File dst = null;
++            for (String part : libraryPath.split(File.pathSeparator)) {
++                if (part.isEmpty()) {
++                    continue;
++                }
++                if (part.startsWith("/storage/") || part.startsWith("/sdcard/")) {
++                    if (src == null) {
++                        src = new File(part);
++                    }
++                } else if (dst == null) {
++                    dst = new File(part);
++                }
++            }
++
++            if (src == null || dst == null || !src.isDirectory()) {
++                return;
++            }
++
++            dst.mkdirs();
++            File[] files = src.listFiles((dir, name) -> name.endsWith(".so"));
++            if (files == null) {
++                return;
++            }
++
++            for (File f : files) {
++                File out = new File(dst, f.getName());
++                Files.copy(f.toPath(), out.toPath(), StandardCopyOption.REPLACE_EXISTING);
++                out.setReadable(true, false);
++                out.setExecutable(true, false);
++                System.out.println("[VulkanMod] copied native " + f.getName() + " -> " + out.getAbsolutePath());
++            }
++        } catch (Throwable t) {
++            System.err.println("[VulkanMod] failed to copy natives: " + t);
++        }
++    }
++}
