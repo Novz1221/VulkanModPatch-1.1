@@ -1,0 +1,118 @@
+diff -ruN orig_dev/src/main/java/net/vulkanmod/vulkan/Vulkan.java VulkanMod-dev/src/main/java/net/vulkanmod/vulkan/Vulkan.java
+--- orig_dev/src/main/java/net/vulkanmod/vulkan/Vulkan.java	2026-11-08 06:33:54.686198648 +0000
++++ VulkanMod-dev/src/main/java/net/vulkanmod/vulkan/Vulkan.java	2026-11-08 06:33:54.726087956 +0000
+@@ -41,14 +41,14 @@
+ import static org.lwjgl.vulkan.EXTDebugUtils.*;
+ import static org.lwjgl.vulkan.KHRPortabilityEnumeration.VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME;
+ import static org.lwjgl.vulkan.VK10.*;
+-import static org.lwjgl.vulkan.VK12.VK_API_VERSION_1_2;
++import static org.lwjgl.vulkan.VK11.VK_API_VERSION_1_1;
+ 
+ public class Vulkan {
+ 
+         public static final boolean ENABLE_VALIDATION_LAYERS = false;
+ //    public static final boolean ENABLE_VALIDATION_LAYERS = true;
+ 
+-    public static final boolean DYNAMIC_RENDERING = true;
++    public static final boolean DYNAMIC_RENDERING = false;
+ 
+     public static final Set<String> VALIDATION_LAYERS;
+ 
+@@ -65,7 +65,7 @@
+     }
+ 
+     public static final Set<String> REQUIRED_DEVICE_EXTENSIONS = Set.of(
+-            "VK_KHR_dynamic_rendering", "VK_KHR_synchronization2", "VK_KHR_swapchain"
++            "VK_KHR_swapchain"
+     );
+ 
+     public static long window;
+@@ -166,7 +166,7 @@
+             allocatorCreateInfo.device(DeviceManager.vkDevice);
+             allocatorCreateInfo.pVulkanFunctions(vulkanFunctions);
+             allocatorCreateInfo.instance(Instance.instance);
+-            allocatorCreateInfo.vulkanApiVersion(VK_API_VERSION_1_2);
++            allocatorCreateInfo.vulkanApiVersion(VK_API_VERSION_1_1);
+ 
+             PointerBuffer pAllocator = stack.pointers(VK_NULL_HANDLE);
+ 
+@@ -265,7 +265,7 @@
+                 appInfo.applicationVersion(VK_MAKE_VERSION(1, 0, 0));
+                 appInfo.pEngineName(stack.UTF8Safe("VulkanMod Engine"));
+                 appInfo.engineVersion(VK_MAKE_VERSION(1, 0, 0));
+-                appInfo.apiVersion(VK_API_VERSION_1_2);
++                appInfo.apiVersion(VK_API_VERSION_1_1);
+ 
+                 VkInstanceCreateInfo createInfo = VkInstanceCreateInfo.calloc(stack);
+ 
+diff -ruN orig_dev/src/main/java/net/vulkanmod/vulkan/device/Device.java VulkanMod-dev/src/main/java/net/vulkanmod/vulkan/device/Device.java
+--- orig_dev/src/main/java/net/vulkanmod/vulkan/device/Device.java	2026-11-08 06:33:54.686247170 +0000
++++ VulkanMod-dev/src/main/java/net/vulkanmod/vulkan/device/Device.java	2026-11-08 06:33:54.726600016 +0000
+@@ -69,10 +69,10 @@
+ 
+         this.availableFeatures = VkPhysicalDeviceFeatures2.calloc().sType$Default();
+ 
+-        this.availableFeatures11 = VkPhysicalDeviceVulkan11Features.malloc().sType$Default();
++        this.availableFeatures11 = VkPhysicalDeviceVulkan11Features.calloc().sType$Default();
+         this.availableFeatures.pNext(this.availableFeatures11);
+ 
+-        this.availableFeatures12 = VkPhysicalDeviceVulkan12Features.malloc().sType$Default();
++        this.availableFeatures12 = VkPhysicalDeviceVulkan12Features.calloc().sType$Default();
+         this.availableFeatures.pNext(this.availableFeatures12);
+ 
+         vkGetPhysicalDeviceFeatures2(this.physicalDevice, this.availableFeatures);
+diff -ruN orig_dev/src/main/java/net/vulkanmod/vulkan/device/DeviceManager.java VulkanMod-dev/src/main/java/net/vulkanmod/vulkan/device/DeviceManager.java
+--- orig_dev/src/main/java/net/vulkanmod/vulkan/device/DeviceManager.java	2026-11-08 06:33:54.686273281 +0000
++++ VulkanMod-dev/src/main/java/net/vulkanmod/vulkan/device/DeviceManager.java	2026-11-08 06:33:54.726890741 +0000
+@@ -24,7 +24,7 @@
+ import static org.lwjgl.vulkan.EXTDebugUtils.VK_EXT_DEBUG_UTILS_EXTENSION_NAME;
+ import static org.lwjgl.vulkan.KHRSurface.*;
+ import static org.lwjgl.vulkan.VK10.*;
+-import static org.lwjgl.vulkan.VK12.VK_API_VERSION_1_2;
++import static org.lwjgl.vulkan.VK11.VK_API_VERSION_1_1;
+ 
+ public abstract class DeviceManager {
+     public static List<Device> availableDevices;
+@@ -201,8 +201,10 @@
+             createInfo.sType(VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO);
+             createInfo.pQueueCreateInfos(queueCreateInfos);
+             createInfo.pEnabledFeatures(deviceFeatures.features());
+-            createInfo.pNext(deviceVulkan11Features);
+-            createInfo.pNext(deviceVulkan12Features);
++            if (org.lwjgl.vulkan.VK10.VK_VERSION_MINOR(device.properties().apiVersion()) >= 2) {
++                createInfo.pNext(deviceVulkan11Features);
++                createInfo.pNext(deviceVulkan12Features);
++            }
+ 
+             if (Vulkan.DYNAMIC_RENDERING) {
+                 VkPhysicalDeviceDynamicRenderingFeaturesKHR dynamicRenderingFeaturesKHR = VkPhysicalDeviceDynamicRenderingFeaturesKHR.calloc(stack);
+@@ -247,7 +249,7 @@
+             int res = vkCreateDevice(physicalDevice, createInfo, null, pDevice);
+             Vulkan.checkResult(res, "Failed to create logical device");
+ 
+-            vkDevice = new VkDevice(pDevice.get(0), physicalDevice, createInfo, VK_API_VERSION_1_2);
++            vkDevice = new VkDevice(pDevice.get(0), physicalDevice, createInfo, VK_API_VERSION_1_1);
+ 
+             graphicsQueue = new GraphicsQueue(stack, indices.graphicsFamily);
+             transferQueue = new TransferQueue(stack, indices.transferFamily);
+diff -ruN orig_dev/src/main/java/net/vulkanmod/vulkan/shader/SpirvCompiler.java VulkanMod-dev/src/main/java/net/vulkanmod/vulkan/shader/SpirvCompiler.java
+--- orig_dev/src/main/java/net/vulkanmod/vulkan/shader/SpirvCompiler.java	2026-11-08 06:33:54.687086130 +0000
++++ VulkanMod-dev/src/main/java/net/vulkanmod/vulkan/shader/SpirvCompiler.java	2026-11-08 06:33:54.726390359 +0000
+@@ -7,7 +7,7 @@
+ import org.lwjgl.util.shaderc.ShadercIncludeResolveI;
+ import org.lwjgl.util.shaderc.ShadercIncludeResult;
+ import org.lwjgl.util.shaderc.ShadercIncludeResultReleaseI;
+-import org.lwjgl.vulkan.VK12;
++import org.lwjgl.vulkan.VK11;
+ 
+ import java.io.IOException;
+ import java.net.URI;
+@@ -59,7 +59,7 @@
+         if (DEBUG)
+             shaderc_compile_options_set_generate_debug_info(options);
+ 
+-        shaderc_compile_options_set_target_env(options, shaderc_env_version_vulkan_1_2, VK12.VK_API_VERSION_1_2);
++        shaderc_compile_options_set_target_env(options, shaderc_env_version_vulkan_1_1, VK11.VK_API_VERSION_1_1);
+         shaderc_compile_options_set_include_callbacks(options, SHADER_INCLUDER, SHADER_RELEASER, pUserData);
+ 
+         Shaderc.shaderc_compile_options_set_auto_bind_uniforms(options, true);
