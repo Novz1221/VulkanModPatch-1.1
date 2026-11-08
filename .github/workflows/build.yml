@@ -1,5 +1,3 @@
-#       - name: apply patch
-        run: patch -p1 < vulkan11-dev-1.21.11.patch
 
 name: build
 on: [pull_request, push]
@@ -25,6 +23,8 @@ jobs:
           distribution: 'microsoft'
       - name: make gradle wrapper executable
         run: chmod +x ./gradlew
+      - name: apply patch
+        run: patch -p1 < vulkan11-dev-1.21.11.patch
       - name: build
         run: ./gradlew build
       - name: capture build artifacts
